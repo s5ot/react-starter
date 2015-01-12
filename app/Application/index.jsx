@@ -33,6 +33,7 @@ var PhoneList = React.createClass({
 
 var Application = React.createClass({
   mixins: [StateFromStoreMixin],
+
   getInitialState: function() {
     return {data: [
       {'name': 'Nexus S', 'snippet': 'Fast just got faster with Nexus S.'},
@@ -40,11 +41,34 @@ var Application = React.createClass({
       {'name': 'MOTOROLA XOOM™', 'snippet': 'The Next, Next Generation tablet.'}
     ]};
   },
+
   componentDidMount: function() {
-    var button = this.refs.myClick.getDOMNode();
-    var clickStream = Rx.Observable.fromEvent(button,  'click')
-    .subscribe(function() { console.log('clicked!');});
+    var data = this.state.data;
+    var search = this.refs.search.getDOMNode();
+    var keyups = Rx.Observable.fromEvent(search,  'keyup')
+    .map(function (e) {
+      return e.target.value;
+    })
+    //.subscribe(function(s) { console.log(s);})
+    .subscribe(function(s) {
+      var matcher = new RegExp(".*" + s + ".*", 'i');
+      var source = Rx.Observable.fromArray(data).filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) })
+         .toArray();
+
+source.subscribe(
+  function(x) {
+console.log(x);
+},
+function(err) {
+console.log('error');
+},
+function() {
+console.log('completed');
+}
+    );
+    });
   },
+
   statics: {
     getState: function(stores, params) {
       var transition = stores.Router.getItem("transition");
@@ -53,13 +77,16 @@ var Application = React.createClass({
       };
     },
   },
+
   render: function() {
     return <div className={this.state.loading ? "application loading" : "application"}>
       {this.state.loading ? <div style={{float: "right"}}>loading...</div> : null}
       <h1>react-starter</h1>
+      <input type="text" ref="search" />
       <PhoneList data={this.state.data} />
     </div>;
   },
+
   update: function() {
     var { stores } = this.context;
     Object.keys(stores).forEach(function(key) {
@@ -67,4 +94,5 @@ var Application = React.createClass({
     });
   }
 });
+
 module.exports = Application;
