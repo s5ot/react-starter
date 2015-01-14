@@ -44,30 +44,38 @@ var Application = React.createClass({
 
   componentDidMount: function() {
     var data = this.state.data;
+    var newData = [];
     var search = this.refs.search.getDOMNode();
     var keyups = Rx.Observable.fromEvent(search,  'keyup')
     .map(function (e) {
       return e.target.value;
     })
-    //.subscribe(function(s) { console.log(s);})
-    .subscribe(function(s) {
+    .throttle(500)
+    .distinctUntilChanged()
+    .map(
+      function(x) {
+        newData = [];
+        this.setState({data: newData});
+        return x;
+      }.bind(this)
+    )
+    .flatMap(function(s) {
       var matcher = new RegExp(".*" + s + ".*", 'i');
-      var source = Rx.Observable.fromArray(data).filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) })
-         .toArray();
-
-source.subscribe(
-  function(x) {
-console.log(x);
-},
-function(err) {
-console.log('error');
-},
-function() {
-console.log('completed');
-}
+      return Rx.Observable.fromArray(data).filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) });
+    })
+    .subscribe(
+      function(x) {
+        newData.push(x);
+        this.setState({data: newData});
+      }.bind(this),
+      function(err) {
+        console.log('error');
+      },
+      function() {
+        console.log('completed');
+      }
     );
-    });
-  },
+ },
 
   statics: {
     getState: function(stores, params) {
