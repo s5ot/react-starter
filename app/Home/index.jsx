@@ -52,114 +52,115 @@ var Application = React.createClass({
       return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
     });
 
-    var data = [];
+    var originalData = [];
     responseStream.subscribe(function(response) {
       this.setState({data: response});
-      data = this.state.data;
+      originalData = this.state.data;
     }.bind(this));
 
     var newData = [];
     var search = this.refs.search.getDOMNode();
     var keyups = Rx.Observable.fromEvent(search,  'keyup')
-      .map(function (e) {
-        return e.target.value;
-      })
-      .throttle(500)
-      .distinctUntilChanged()
-      .map(
-        function(x) {
-          newData = [];
-          this.setState({data: newData});
-          return x;
-        }.bind(this)
-      )
-      .flatMap(function(s) {
-        var matcher = new RegExp(".*" + s + ".*", 'i');
-        return Rx.Observable.fromArray(data).filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) });
-      })
-      .map(
-        function(x) {
-          newData.push(x);
-          this.setState({data: newData});
-          return newData;
-        }.bind(this)
-      )
-      .subscribe(
-        function(x) {
-          var orderProp = this.state.orderProp;
-          this.setState({data: this.state.data.sort(function(a, b) {
-            if (a[orderProp] > b[orderProp]) {
-              return 1;
-            }
-            if (a[orderProp] < b[orderProp]) {
-              return -1;
-            }
-            return 0;
-          })});
-        }.bind(this),
-        function(err) {
-          console.log('error');
-        },
-        function() {
-          console.log('completed');
-        }
-      );
+    .map(function (e) {
+      return e.target.value;
+    })
+    .throttle(500)
+    .distinctUntilChanged()
+    .map(
+      function(x) {
+        newData = [];
+        this.setState({data: newData});
+        return x;
+      }.bind(this)
+    )
+    .flatMap(function(s) {
+      var matcher = new RegExp(".*" + s + ".*", 'i');
+      return Rx.Observable.fromArray(originalData).filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) });
+    })
+    .map(
+      function(x) {
+        newData.push(x);
+        return newData;
+      }.bind(this)
+    )
+    .subscribe(
+      function(x) {
+        var orderProp = this.state.orderProp;
+        this.setState({data: x.sort(function(a, b) {
+          if (String(a[orderProp]).toLowerCase() > String(b[orderProp]).toLowerCase()) {
+            return 1;
+          }
+          if (String(a[orderProp]).toLowerCase() < String(b[orderProp]).toLowerCase()) {
+            return -1;
+          }
+          return 0;
+        })});
+      }.bind(this),
+      function(err) {
+        console.log('error');
+      },
+      function() {
+        console.log('completed');
+      }
+    );
 
+    var filteredData = [];
     var sort = this.refs.sort.getDOMNode();
     var changes = Rx.Observable.fromEvent(sort, 'change')
-      .map(
-        function (e) {
-          this.setState({orderProp: e.target.value});
-          return e.target.value;
-        }.bind(this)
-      )
-      .map(function(x) {
-          this.setState({data: []});
-          return x;
-        }.bind(this)
-      )
-      .subscribe(
-        function(x) {
-          console.log(x);
-          var orderProp = this.state.orderProp;
-          this.setState({data: this.state.data.sort(function(a, b) {
-            if (a[orderProp] > b[orderProp]) {
-              return 1;
-            }
-            if (a[orderProp] < b[orderProp]) {
-              return -1;
-            }
-            return 0;
-          })});
-        }.bind(this),
-        function(err) {
-          console.log('error');
-        },
-        function() {
-          console.log('completed');
-        }
-      );
- },
+    .map(
+      function (e) {
+        this.setState({orderProp: e.target.value});
+        return e.target.value;
+      }.bind(this)
+    )
+    .map(function(x) {
+      filteredData = this.state.data;
+      this.setState({data: []});
+      return filteredData;
+    }.bind(this)
+    )
+    .subscribe(
+      function(x) {
+        var orderProp = this.state.orderProp;
+        this.setState({data: x.sort(function(a, b) {
+          if (String(a[orderProp]).toLowerCase() > String(b[orderProp]).toLowerCase()) {
+            return 1;
+          }
+          if (String(a[orderProp]).toLowerCase() < String(b[orderProp]).toLowerCase()) {
+            return -1;
+          }
+          return 0;
+        })});
+      }.bind(this),
+      function(err) {
+        console.log('error');
+      },
+      function() {
+        console.log('completed');
+      }
+    );
+  },
 
- render: function() {
-   return <div className={this.state.loading ? "application loading" : "application"}>
-     {this.state.loading ? <div style={{float: "right"}}>loading...</div> : null}
-       <div className="container-fluid">
-         <div className="row">
-           <div className="col-md-2">
-             Search: <input type="text" ref="search" />
-             Sort by:
-             <select ref="sort" value={this.state.orderProp}>
-               <option value="name">Alphabetical</option>
-               <option value="age">Newest</option>
-             </select>
-           </div>
-           <div className="col-md-10">
-             <PhoneList data={this.state.data} />
-           </div>
-         </div>
-       </div>
-     </div>
+  render: function() {
+    return (
+      <div>
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-md-2">
+              Search: <input type="text" ref="search" />
+              Sort by:
+              <select ref="sort" value={this.state.orderProp}>
+                <option value="name">Alphabetical</option>
+                <option value="age">Newest</option>
+              </select>
+            </div>
+            <div className="col-md-10">
+              <PhoneList data={this.state.data} />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
   },
 });
 
