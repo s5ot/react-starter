@@ -52,94 +52,6 @@ var Application = React.createClass({
           return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
         });
 
-    //var originalData = [];
-    //var phoneStream = responseStream.toArray();
-    //console.log(phoneStream);
-
-    /*
-    var newData = [];
-    var search = this.refs.search.getDOMNode();
-    var keyups = Rx.Observable.fromEvent(search,  'keyup')
-    .map(function (e) {
-      return e.target.value;
-    })
-    .throttle(500)
-    .distinctUntilChanged()
-    .map(
-      function(x) {
-        newData = [];
-        this.setState({data: newData});
-        return x;
-      }.bind(this)
-    )
-    .flatMap(function(s) {
-      var matcher = new RegExp(".*" + s + ".*", 'i');
-      return Rx.Observable.fromArray(originalData).filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) });
-    })
-    .map(
-      function(x) {
-        newData.push(x);
-        return newData;
-      }.bind(this)
-    )
-    .subscribe(
-      function(x) {
-        var orderProp = this.state.orderProp;
-        this.setState({data: x.sort(function(a, b) {
-          if (String(a[orderProp]).toLowerCase() > String(b[orderProp]).toLowerCase()) {
-            return 1;
-          }
-          if (String(a[orderProp]).toLowerCase() < String(b[orderProp]).toLowerCase()) {
-            return -1;
-          }
-          return 0;
-        })});
-      }.bind(this),
-      function(err) {
-        console.log('error');
-      },
-      function() {
-        console.log('completed');
-      }
-    );
-
-    var filteredData = [];
-    var sort = this.refs.sort.getDOMNode();
-    var changes = Rx.Observable.fromEvent(sort, 'change')
-    .map(
-      function (e) {
-        this.setState({orderProp: e.target.value});
-        return e.target.value;
-      }.bind(this)
-    )
-    .map(function(x) {
-      filteredData = this.state.data;
-      this.setState({data: []});
-      return filteredData;
-    }.bind(this)
-    )
-    .subscribe(
-      function(x) {
-        var orderProp = this.state.orderProp;
-        this.setState({data: x.sort(function(a, b) {
-          if (String(a[orderProp]).toLowerCase() > String(b[orderProp]).toLowerCase()) {
-            return 1;
-          }
-          if (String(a[orderProp]).toLowerCase() < String(b[orderProp]).toLowerCase()) {
-            return -1;
-          }
-          return 0;
-        })});
-      }.bind(this),
-      function(err) {
-        console.log('error');
-      },
-      function() {
-        console.log('completed');
-      }
-    );
-    */
-
     var search = this.refs.search.getDOMNode();
     var keyupStream = Rx.Observable.fromEvent(search,  'keyup')
       .map(function (e) {
@@ -197,44 +109,6 @@ var Application = React.createClass({
         console.log('completed');
       }
     );
-
-    /*
-    var order = this.refs.order.getDOMNode();
-    var orderStream = Rx.Observable.fromEvent(order, 'change')
-        .map(function (e) {
-            return e.target.value;
-          }
-        )
-        .startWith('age');
-
-    var filteredAndOrderedStream = orderStream
-        .combineLatest(filteredStream,
-          function(o, filtered) {
-            console.log(filtered);
-            return filtered.sort(function(a, b) {
-              if (String(a[orderProp]).toLowerCase() > String(b[orderProp]).toLowerCase()) {
-                return 1;
-              }
-              if (String(a[orderProp]).toLowerCase() < String(b[orderProp]).toLowerCase()) {
-                return -1;
-              }
-              return 0;
-              });
-          }
-        );
-
-    filteredAndOrderedStream.subscribe(
-      function(x) {
-        console.log(x);
-      },
-      function(err) {
-        console.log('error');
-      },
-      function() {
-        console.log('completed');
-      }
-    );
-    */
   },
 
   render: function() {
