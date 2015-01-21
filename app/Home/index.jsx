@@ -48,16 +48,15 @@ var Application = React.createClass({
     var requestStream = Rx.Observable.returnValue('http://localhost:8000/phones/phones.json');
 
     var responseStream = requestStream
-    .flatMap(function(requestUrl) {
-      return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
-    });
+        .flatMap(function(requestUrl) {
+          return Rx.Observable.fromPromise(jQuery.getJSON(requestUrl));
+        });
 
-    var originalData = [];
-    responseStream.subscribe(function(response) {
-      this.setState({data: response});
-      originalData = this.state.data;
-    }.bind(this));
+    //var originalData = [];
+    //var phoneStream = responseStream.toArray();
+    //console.log(phoneStream);
 
+    /*
     var newData = [];
     var search = this.refs.search.getDOMNode();
     var keyups = Rx.Observable.fromEvent(search,  'keyup')
@@ -139,6 +138,103 @@ var Application = React.createClass({
         console.log('completed');
       }
     );
+    */
+
+    var search = this.refs.search.getDOMNode();
+    var keyupStream = Rx.Observable.fromEvent(search,  'keyup')
+      .map(function (e) {
+        return e.target.value;
+      })
+      .throttle(500)
+      .distinctUntilChanged()
+      .startWith('');
+
+    var order = this.refs.order.getDOMNode();
+    var orderStream = Rx.Observable.fromEvent(order, 'change')
+        .map(function (e) {
+            return e.target.value;
+          }
+        )
+        .startWith('age');
+
+    orderStream.subscribe(
+      function(x) {
+        this.setState({orderProp: x});
+      }.bind(this),
+      function(err) {
+        console.log('error');
+      },
+      function() {
+        console.log('completed');
+      }
+    );
+
+    var filteredStream = responseStream
+        .combineLatest(keyupStream, orderStream,
+          function(data, k, o) {
+            var matcher = new RegExp(".*" + k + ".*", 'i');
+            return data.filter(function(phone) { return phone.name.match(matcher) || phone.snippet.match(matcher) })
+                    .sort(function(a, b) {
+                      if (String(a[o]).toLowerCase() > String(b[o]).toLowerCase()) {
+                        return 1;
+                      }
+                      if (String(a[o]).toLowerCase() < String(b[o]).toLowerCase()) {
+                        return -1;
+                      }
+                      return 0;
+                    });
+          }
+        );
+
+    filteredStream.subscribe(
+      function(x) {
+        this.setState({data: x});
+      }.bind(this),
+      function(err) {
+        console.log('error');
+      },
+      function() {
+        console.log('completed');
+      }
+    );
+
+    /*
+    var order = this.refs.order.getDOMNode();
+    var orderStream = Rx.Observable.fromEvent(order, 'change')
+        .map(function (e) {
+            return e.target.value;
+          }
+        )
+        .startWith('age');
+
+    var filteredAndOrderedStream = orderStream
+        .combineLatest(filteredStream,
+          function(o, filtered) {
+            console.log(filtered);
+            return filtered.sort(function(a, b) {
+              if (String(a[orderProp]).toLowerCase() > String(b[orderProp]).toLowerCase()) {
+                return 1;
+              }
+              if (String(a[orderProp]).toLowerCase() < String(b[orderProp]).toLowerCase()) {
+                return -1;
+              }
+              return 0;
+              });
+          }
+        );
+
+    filteredAndOrderedStream.subscribe(
+      function(x) {
+        console.log(x);
+      },
+      function(err) {
+        console.log('error');
+      },
+      function() {
+        console.log('completed');
+      }
+    );
+    */
   },
 
   render: function() {
@@ -149,7 +245,7 @@ var Application = React.createClass({
             <div className="col-md-2">
               Search: <input type="text" ref="search" />
               Sort by:
-              <select ref="sort" value={this.state.orderProp}>
+              <select ref="order" value={this.state.orderProp}>
                 <option value="name">Alphabetical</option>
                 <option value="age">Newest</option>
               </select>
